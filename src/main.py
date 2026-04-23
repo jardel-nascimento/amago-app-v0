@@ -1,4 +1,5 @@
 from services.anamnese import coletar_anamnese
+from services.trilha_agua import executar_trilha
 
 
 def exibir_menu() -> None:
@@ -17,6 +18,7 @@ def main() -> None:
             print(f"Idade: {respostas['idade']}")
             print(f"Peso: {respostas['peso']}")
             print(f"Consumo de agua: {respostas['consumo_agua']}")
+            executar_trilha()
         elif opcao == "2":
             print("Encerrando aplicacao.")
             break
