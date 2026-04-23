@@ -1,6 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -e
-
-buildozer android clean
 rm -rf .buildozer
+rm -rf bin
