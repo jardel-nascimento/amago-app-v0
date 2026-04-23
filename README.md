@@ -26,6 +26,11 @@ Projeto desenvolvido para a disciplina **Desenvolvimento de Produto II**.
 - `prints/`: imagens do sistema para o trabalho
 - `config/`: arquivos de configuração, Firebase e credenciais
 
-## Execução
+## Como executar
 
-Instruções de execução serão adicionadas nas próximas iterações do projeto.
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python3 run.py
+```
