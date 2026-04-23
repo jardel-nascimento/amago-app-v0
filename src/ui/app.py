@@ -5,6 +5,27 @@ from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 
 
+def montar_trilha(consumo_agua: str) -> dict:
+    consumo_base = {
+        "baixo": 1.0,
+        "medio": 1.5,
+        "alto": 2.0,
+    }
+    consumo_diario = consumo_base.get(consumo_agua, 1.0)
+    meta = 2.0
+    dia_1 = consumo_diario
+    dia_2 = min(consumo_diario + 0.5, 2.5)
+    media = (dia_1 + dia_2) / 2
+
+    return {
+        "consumo_diario": consumo_diario,
+        "meta": meta,
+        "dia_1": dia_1,
+        "dia_2": dia_2,
+        "media": media,
+    }
+
+
 class AmagoApp(App):
     def build(self) -> BoxLayout:
         layout = BoxLayout(orientation="vertical", padding=20, spacing=20)
@@ -36,9 +57,34 @@ class AmagoApp(App):
     def _ajustar_texto(self, *_args) -> None:
         self.resultado.text_size = self.resultado.size
 
+    def coletar_anamnese_ui(self) -> dict:
+        idade = self.idade_input.text.strip()
+        peso = self.peso_input.text.strip()
+        consumo_agua = self.consumo_agua_input.text.strip().lower()
+
+        if not idade or not peso or not consumo_agua:
+            raise ValueError("Preencha todos os campos.")
+
+        try:
+            idade_valor = int(idade)
+            peso_valor = float(peso)
+        except ValueError as exc:
+            raise ValueError("Idade e peso devem ser numericos.") from exc
+
+        return {
+            "idade": idade_valor,
+            "peso": peso_valor,
+            "consumo_agua": consumo_agua,
+        }
+
     def executar_fluxo(self, _instance) -> None:
-        anamnese = simular_anamnese()
-        trilha = simular_trilha_agua()
+        try:
+            anamnese = self.coletar_anamnese_ui()
+        except ValueError as erro:
+            self.resultado.text = str(erro)
+            return
+
+        trilha = montar_trilha(anamnese["consumo_agua"])
 
         self.resultado.text = (
             "Resumo do app:\n"
@@ -47,7 +93,6 @@ class AmagoApp(App):
             f"Consumo de agua: {anamnese['consumo_agua']}\n"
             f"Consumo diario: {trilha['consumo_diario']} litros\n"
             f"Meta: {trilha['meta']} litros\n"
-            f"Esquece de beber agua: {trilha['esquece_agua']}\n"
             f"Dia 1: {trilha['dia_1']} litros\n"
             f"Dia 2: {trilha['dia_2']} litros\n"
             f"Media: {trilha['media']} litros"
