@@ -2,40 +2,22 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-
-
-def simular_anamnese() -> dict:
-    return {
-        "idade": 25,
-        "peso": 70.0,
-        "consumo_agua": "medio",
-    }
-
-
-def simular_trilha_agua() -> dict:
-    consumo_diario = 1.5
-    meta = 2.0
-    esquece_agua = "sim"
-    dia_1 = 1.8
-    dia_2 = 2.1
-    media = (dia_1 + dia_2) / 2
-
-    return {
-        "consumo_diario": consumo_diario,
-        "meta": meta,
-        "esquece_agua": esquece_agua,
-        "dia_1": dia_1,
-        "dia_2": dia_2,
-        "media": media,
-    }
+from kivy.uix.textinput import TextInput
 
 
 class AmagoApp(App):
     def build(self) -> BoxLayout:
         layout = BoxLayout(orientation="vertical", padding=20, spacing=20)
 
+        self.idade_input = TextInput(hint_text="Idade", multiline=False)
+        self.peso_input = TextInput(hint_text="Peso", multiline=False)
+        self.consumo_agua_input = TextInput(
+            hint_text="Consumo de agua (baixo, medio, alto)",
+            multiline=False,
+        )
+
         self.resultado = Label(
-            text="Aplicativo Amago v0\nClique em Iniciar para simular a anamnese e a trilha de agua.",
+            text="Aplicativo Amago v0\nPreencha os campos e clique em Iniciar.",
             halign="left",
             valign="middle",
         )
@@ -44,6 +26,9 @@ class AmagoApp(App):
         botao_iniciar = Button(text="Iniciar", size_hint=(1, 0.2))
         botao_iniciar.bind(on_press=self.executar_fluxo)
 
+        layout.add_widget(self.idade_input)
+        layout.add_widget(self.peso_input)
+        layout.add_widget(self.consumo_agua_input)
         layout.add_widget(self.resultado)
         layout.add_widget(botao_iniciar)
         return layout
