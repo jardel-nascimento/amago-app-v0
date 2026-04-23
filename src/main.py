@@ -1,5 +1,8 @@
+import os
+
 from services.anamnese import coletar_anamnese
 from services.trilha_agua import executar_trilha
+from ui.app import AmagoApp
 
 
 def exibir_menu() -> None:
@@ -27,4 +30,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    if os.environ.get("ANDROID_ARGUMENT"):
+        AmagoApp().run()
+    else:
+        main()
