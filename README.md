@@ -34,3 +34,15 @@ source .venv/bin/activate
 pip install -r requirements.txt
 python3 run.py
 ```
+
+Linux/macOS:
+
+```bash
+./run.sh
+```
+
+Windows:
+
+```bash
+run.bat
+```
