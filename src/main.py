@@ -1,3 +1,6 @@
+from services.anamnese import coletar_anamnese
+
+
 def exibir_menu() -> None:
     print("1. iniciar")
     print("2. sair")
@@ -9,7 +12,11 @@ def main() -> None:
         opcao = input("Escolha uma opcao: ").strip()
 
         if opcao == "1":
-            print("Aplicacao iniciada.")
+            respostas = coletar_anamnese()
+            print("Resumo da anamnese:")
+            print(f"Idade: {respostas['idade']}")
+            print(f"Peso: {respostas['peso']}")
+            print(f"Consumo de agua: {respostas['consumo_agua']}")
         elif opcao == "2":
             print("Encerrando aplicacao.")
             break
