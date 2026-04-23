@@ -46,3 +46,13 @@ Windows:
 ```bash
 run.bat
 ```
+
+## Gerar APK
+
+```bash
+./clean.sh
+./build.sh
+```
+
+- APK em `bin/`
+- Log em `logs/buildozer.log`
