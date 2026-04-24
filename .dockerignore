@@ -1,0 +1,11 @@
+.git
+.gitignore
+.buildozer
+.docker-buildozer
+.docker-buildozer-home
+.venv
+.python-version
+bin
+logs
+__pycache__
+*.pyc

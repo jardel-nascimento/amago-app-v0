@@ -1,0 +1,11 @@
+services:
+  buildozer:
+    build:
+      context: .
+    working_dir: /app
+    volumes:
+      - .:/app
+      - .:/home/user/hostcwd
+      - ./.docker-buildozer:/app/.buildozer
+      - ./.docker-buildozer-home:/home/user/.buildozer
+    command: android debug
