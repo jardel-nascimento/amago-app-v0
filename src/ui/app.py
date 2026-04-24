@@ -28,75 +28,121 @@ def montar_trilha(consumo_agua: str) -> dict:
 
 class AmagoApp(App):
     def build(self) -> BoxLayout:
-        layout = BoxLayout(orientation="vertical", padding=20, spacing=20)
+        self.step = 0
+        self.respostas = {}
+        self.input_atual = None
 
-        self.idade_input = TextInput(hint_text="Idade", multiline=False)
-        self.peso_input = TextInput(hint_text="Peso", multiline=False)
-        self.consumo_agua_input = TextInput(
-            hint_text="Consumo de agua (baixo, medio, alto)",
-            multiline=False,
+        self.layout = BoxLayout(orientation="vertical", padding=20, spacing=20)
+        self.renderizar_step()
+        return self.layout
+
+    def renderizar_step(self) -> None:
+        self.layout.clear_widgets()
+        self.input_atual = None
+
+        titulo, conteudo, texto_botao = self.obter_conteudo_step()
+
+        titulo_label = Label(
+            text=titulo,
+            font_size=24,
+            bold=True,
+            size_hint=(1, 0.18),
+            halign="center",
+            valign="middle",
         )
+        titulo_label.bind(size=self._ajustar_label)
 
-        self.resultado = Label(
-            text="Aplicativo Amago v0\nPreencha os campos e clique em Iniciar.",
+        conteudo_label = Label(
+            text=conteudo,
+            size_hint=(1, 0.45),
             halign="left",
             valign="middle",
         )
-        self.resultado.bind(size=self._ajustar_texto)
+        conteudo_label.bind(size=self._ajustar_label)
 
-        botao_iniciar = Button(text="Iniciar", size_hint=(1, 0.2))
-        botao_iniciar.bind(on_press=self.executar_fluxo)
+        self.layout.add_widget(titulo_label)
+        self.layout.add_widget(conteudo_label)
 
-        layout.add_widget(self.idade_input)
-        layout.add_widget(self.peso_input)
-        layout.add_widget(self.consumo_agua_input)
-        layout.add_widget(self.resultado)
-        layout.add_widget(botao_iniciar)
-        return layout
+        if self.step in {1, 2, 3, 7, 8}:
+            self.input_atual = TextInput(
+                hint_text=self.obter_hint_step(),
+                multiline=False,
+                size_hint=(1, 0.15),
+            )
+            self.layout.add_widget(self.input_atual)
 
-    def _ajustar_texto(self, *_args) -> None:
-        self.resultado.text_size = self.resultado.size
+        botao = Button(text=texto_botao, size_hint=(1, 0.18))
+        botao.bind(on_press=self.avancar_step)
+        self.layout.add_widget(botao)
 
-    def coletar_anamnese_ui(self) -> dict:
-        idade = self.idade_input.text.strip()
-        peso = self.peso_input.text.strip()
-        consumo_agua = self.consumo_agua_input.text.strip().lower()
-
-        if not idade or not peso or not consumo_agua:
-            raise ValueError("Preencha todos os campos.")
-
-        try:
-            idade_valor = int(idade)
-            peso_valor = float(peso)
-        except ValueError as exc:
-            raise ValueError("Idade e peso devem ser numericos.") from exc
-
-        return {
-            "idade": idade_valor,
-            "peso": peso_valor,
-            "consumo_agua": consumo_agua,
+    def obter_conteudo_step(self) -> tuple[str, str, str]:
+        conteudos = {
+            0: (
+                "Amago",
+                "Bem-vindo a trilha guiada de hidratacao.\n"
+                "Avance etapa por etapa para conhecer seu perfil e registrar sua pratica.",
+                "Iniciar",
+            ),
+            1: ("Etapa 1", "Informe sua idade.", "Proximo"),
+            2: ("Etapa 2", "Informe seu peso.", "Proximo"),
+            3: (
+                "Etapa 3",
+                "Informe seu consumo de agua atual: baixo, medio ou alto.",
+                "Proximo",
+            ),
+            4: (
+                "Estudo 1",
+                "A agua participa do equilibrio do corpo e ajuda no funcionamento diario.",
+                "Continuar",
+            ),
+            5: (
+                "Estudo 2",
+                "Manter uma rotina de hidratacao reduz esquecimentos e facilita criar habito.",
+                "Continuar",
+            ),
+            6: (
+                "Estudo 3",
+                "Sede, cansaco e boca seca podem indicar que voce precisa beber mais agua.",
+                "Continuar",
+            ),
+            7: (
+                "Exercicio",
+                "Responda: voce costuma esquecer de beber agua? Digite sim ou nao.",
+                "Proximo",
+            ),
+            8: (
+                "Pratica",
+                "Registre quanto voce bebeu hoje em litros.",
+                "Proximo",
+            ),
+            9: (
+                "Resultado final",
+                "Resumo da trilha concluida.",
+                "Finalizar",
+            ),
         }
+        return conteudos[self.step]
 
-    def executar_fluxo(self, _instance) -> None:
-        try:
-            anamnese = self.coletar_anamnese_ui()
-        except ValueError as erro:
-            self.resultado.text = str(erro)
-            return
+    def obter_hint_step(self) -> str:
+        hints = {
+            1: "Idade",
+            2: "Peso",
+            3: "Consumo de agua (baixo, medio, alto)",
+            7: "sim ou nao",
+            8: "Litros registrados hoje",
+        }
+        return hints[self.step]
 
-        trilha = montar_trilha(anamnese["consumo_agua"])
+    def avancar_step(self, _instance) -> None:
+        if self.input_atual is not None:
+            self.respostas[self.step] = self.input_atual.text.strip()
 
-        self.resultado.text = (
-            "Resumo do app:\n"
-            f"Idade: {anamnese['idade']}\n"
-            f"Peso: {anamnese['peso']}\n"
-            f"Consumo de agua: {anamnese['consumo_agua']}\n"
-            f"Consumo diario: {trilha['consumo_diario']} litros\n"
-            f"Meta: {trilha['meta']} litros\n"
-            f"Dia 1: {trilha['dia_1']} litros\n"
-            f"Dia 2: {trilha['dia_2']} litros\n"
-            f"Media: {trilha['media']} litros"
-        )
+        if self.step < 9:
+            self.step += 1
+            self.renderizar_step()
+
+    def _ajustar_label(self, label: Label, _size) -> None:
+        label.text_size = label.size
 
 
 if __name__ == "__main__":
