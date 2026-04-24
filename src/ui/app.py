@@ -5,24 +5,21 @@ from kivy.uix.label import Label
 from kivy.uix.textinput import TextInput
 
 
-def montar_trilha(consumo_agua: str) -> dict:
+def montar_trilha(consumo_agua: str, registro_agua: float) -> dict:
     consumo_base = {
         "baixo": 1.0,
         "medio": 1.5,
         "alto": 2.0,
     }
-    consumo_diario = consumo_base.get(consumo_agua, 1.0)
+    consumo_diario = consumo_base[consumo_agua]
     meta = 2.0
-    dia_1 = consumo_diario
-    dia_2 = min(consumo_diario + 0.5, 2.5)
-    media = (dia_1 + dia_2) / 2
+    diferenca_meta = registro_agua - meta
 
     return {
         "consumo_diario": consumo_diario,
         "meta": meta,
-        "dia_1": dia_1,
-        "dia_2": dia_2,
-        "media": media,
+        "registro_agua": registro_agua,
+        "diferenca_meta": diferenca_meta,
     }
 
 
@@ -31,6 +28,7 @@ class AmagoApp(App):
         self.step = 0
         self.respostas = {}
         self.input_atual = None
+        self.mensagem_erro = ""
 
         self.layout = BoxLayout(orientation="vertical", padding=20, spacing=20)
         self.renderizar_step()
@@ -51,6 +49,9 @@ class AmagoApp(App):
             valign="middle",
         )
         titulo_label.bind(size=self._ajustar_label)
+
+        if self.mensagem_erro:
+            conteudo = f"{conteudo}\n\n{self.mensagem_erro}"
 
         conteudo_label = Label(
             text=conteudo,
@@ -76,6 +77,13 @@ class AmagoApp(App):
         self.layout.add_widget(botao)
 
     def obter_conteudo_step(self) -> tuple[str, str, str]:
+        if self.step == 9:
+            return (
+                "Resultado final",
+                self.montar_resultado_final(),
+                "Finalizar",
+            )
+
         conteudos = {
             0: (
                 "Amago",
@@ -115,11 +123,6 @@ class AmagoApp(App):
                 "Registre quanto voce bebeu hoje em litros.",
                 "Proximo",
             ),
-            9: (
-                "Resultado final",
-                "Resumo da trilha concluida.",
-                "Finalizar",
-            ),
         }
         return conteudos[self.step]
 
@@ -134,12 +137,105 @@ class AmagoApp(App):
         return hints[self.step]
 
     def avancar_step(self, _instance) -> None:
+        self.mensagem_erro = ""
+
         if self.input_atual is not None:
-            self.respostas[self.step] = self.input_atual.text.strip()
+            try:
+                self.salvar_resposta_atual()
+            except ValueError as erro:
+                self.mensagem_erro = str(erro)
+                self.renderizar_step()
+                return
 
         if self.step < 9:
             self.step += 1
             self.renderizar_step()
+
+    def salvar_resposta_atual(self) -> None:
+        valor = self.input_atual.text.strip()
+
+        if not valor:
+            raise ValueError("Preencha esta etapa para continuar.")
+
+        if self.step == 1:
+            self.respostas["idade"] = self.validar_idade(valor)
+            return
+
+        if self.step == 2:
+            self.respostas["peso"] = self.validar_decimal_positivo(
+                valor,
+                "Peso deve ser numerico.",
+            )
+            return
+
+        if self.step == 3:
+            consumo_agua = valor.lower()
+            if consumo_agua not in {"baixo", "medio", "alto"}:
+                raise ValueError("Informe baixo, medio ou alto.")
+            self.respostas["consumo_agua"] = consumo_agua
+            return
+
+        if self.step == 7:
+            resposta = valor.lower()
+            if resposta not in {"sim", "nao"}:
+                raise ValueError("Digite sim ou nao.")
+            self.respostas["esquece_agua"] = resposta
+            return
+
+        if self.step == 8:
+            self.respostas["registro_agua"] = self.validar_decimal_positivo(
+                valor,
+                "Registro deve ser numerico.",
+            )
+
+    def validar_idade(self, valor: str) -> int:
+        try:
+            idade = int(valor)
+        except ValueError as exc:
+            raise ValueError("Idade deve ser um numero inteiro.") from exc
+
+        if idade <= 0:
+            raise ValueError("Idade deve ser maior que zero.")
+
+        return idade
+
+    def validar_decimal_positivo(self, valor: str, mensagem_erro: str) -> float:
+        try:
+            numero = float(valor.replace(",", "."))
+        except ValueError as exc:
+            raise ValueError(mensagem_erro) from exc
+
+        if numero < 0:
+            raise ValueError("Informe um valor maior ou igual a zero.")
+
+        return numero
+
+    def montar_resultado_final(self) -> str:
+        trilha = montar_trilha(
+            self.respostas["consumo_agua"],
+            self.respostas["registro_agua"],
+        )
+
+        if trilha["diferenca_meta"] >= 0:
+            status_meta = (
+                f"Voce atingiu a meta com {trilha['diferenca_meta']:.1f} litros acima."
+            )
+        else:
+            status_meta = (
+                f"Faltaram {abs(trilha['diferenca_meta']):.1f} litros para a meta."
+            )
+
+        return (
+            "Trilha de hidratacao concluida.\n\n"
+            f"Idade: {self.respostas['idade']}\n"
+            f"Peso: {self.respostas['peso']:.1f} kg\n"
+            f"Consumo atual informado: {self.respostas['consumo_agua']}\n"
+            f"Consumo diario estimado: {trilha['consumo_diario']:.1f} litros\n"
+            f"Costuma esquecer de beber agua: {self.respostas['esquece_agua']}\n"
+            f"Registro de hoje: {trilha['registro_agua']:.1f} litros\n"
+            f"Meta da trilha: {trilha['meta']:.1f} litros\n"
+            f"{status_meta}"
+        )
 
     def _ajustar_label(self, label: Label, _size) -> None:
         label.text_size = label.size
