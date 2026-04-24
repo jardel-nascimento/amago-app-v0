@@ -56,3 +56,18 @@ run.bat
 
 - APK em `bin/`
 - Log em `logs/buildozer.log`
+
+## Gerar APK com Docker
+
+```bash
+docker compose up --build
+```
+
+ou
+
+```bash
+./docker-build.sh
+```
+
+- APK em `bin/`
+- Logs visíveis no terminal
