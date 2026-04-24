@@ -26,6 +26,48 @@ Projeto desenvolvido para a disciplina **Desenvolvimento de Produto II**.
 - `prints/`: imagens do sistema para o trabalho
 - `config/`: arquivos de configuração, Firebase e credenciais
 
-## Execução
+## Como executar
 
-Instruções de execução serão adicionadas nas próximas iterações do projeto.
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python3 run.py
+```
+
+Linux/macOS:
+
+```bash
+./run.sh
+```
+
+Windows:
+
+```bash
+run.bat
+```
+
+## Gerar APK
+
+```bash
+./clean.sh
+./build.sh
+```
+
+- APK em `bin/`
+- Log em `logs/buildozer.log`
+
+## Gerar APK com Docker
+
+```bash
+docker compose up --build
+```
+
+ou
+
+```bash
+./docker-build.sh
+```
+
+- APK em `bin/`
+- Logs visíveis no terminal
